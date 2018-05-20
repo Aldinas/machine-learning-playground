@@ -18,7 +18,7 @@ default:
     summary_freq: 1000
     use_recurrent: false
 
-MazeBrain:
+MazeBrainTest:
     max_steps: 5.0e4
     batch_size: 128
     buffer_size: 2048
