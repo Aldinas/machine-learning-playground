@@ -46,9 +46,9 @@ public class Agent_SimpleMaze : Agent
     }
 
     public void ReachedTheGoal()
-    {
+    { 
         // The agent reached the goal, give it a reward.
-        AddReward(5f);
+        AddReward(10f);
 
         // Set the Done state, this will trigger a reset.
         Done();

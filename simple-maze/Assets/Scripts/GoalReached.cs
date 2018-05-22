@@ -6,10 +6,11 @@ public class GoalReached : MonoBehaviour {
 
     public Agent_SimpleMaze agent;
 
-    void OnCollisionEnter(Collision col)
+    void OnTriggerEnter(Collider other)
     {
-        if(col.gameObject.CompareTag("goal"))
+        if(other.gameObject.CompareTag("goal"))
         {
+            Debug.Log("Goal!");
             agent.ReachedTheGoal();
         }
     }
