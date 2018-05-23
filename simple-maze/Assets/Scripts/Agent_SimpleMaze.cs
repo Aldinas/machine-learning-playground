@@ -10,7 +10,8 @@ public class Agent_SimpleMaze : Agent
     public Vector3 spawnPoint;          // The point to spawn our capsule at.
 
     Academy_SimpleMaze academy;         // The academy (we need this for some of the variables it holds)
-    Rigidbody agentRB;                  // Cache the rigidbody attached to the agent itself.
+    // Rigidbody agentRB;                  // Cache the rigidbody attached to the agent itself.
+    CharacterController agentCC;        // Will attempt to Use this in place of the rigidbody. 
     Material groundMaterial;            // The default material assigned to the ground.
     Renderer groundRenderer;            // The renderer of the ground so we can change its colour on success/fail.
     Camera agentCamera;                 // The camera the agent will use for seeing things.
@@ -34,7 +35,8 @@ public class Agent_SimpleMaze : Agent
         agentCamera = GetComponentInChildren<Camera>();
 
         // Get the rigidbody, ground material and ground renderer and cache em.
-        agentRB = GetComponent<Rigidbody>();
+        // agentRB = GetComponent<Rigidbody>();
+        agentCC = GetComponent<CharacterController>();
         groundRenderer = ground.GetComponent<Renderer>();
         groundMaterial = groundRenderer.material;
 
@@ -48,7 +50,7 @@ public class Agent_SimpleMaze : Agent
     public void ReachedTheGoal()
     { 
         // The agent reached the goal, give it a reward.
-        AddReward(10f);
+        AddReward(1f);
 
         // Set the Done state, this will trigger a reset.
         Done();
@@ -87,18 +89,19 @@ public class Agent_SimpleMaze : Agent
                 dirToGo = transform.forward * -1f;
                 break;
             case 2:
-                // rotate left
-                rotateDir = transform.up * 1f;
+                // strafe right
+                rotateDir = transform.up * -1f;
                 break;
             case 3:
-                // rotate right
-                rotateDir = transform.up * -1f;
+                // strafe left
+                rotateDir = transform.up * 1f;
                 break;
         }
         // Apply any rotation.
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
         // Apply force to the agents rigidbody.
-        agentRB.AddForce(dirToGo * academy.agentRunSpeed, ForceMode.VelocityChange);
+        // agentRB.AddForce(dirToGo * academy.agentRunSpeed, ForceMode.VelocityChange);
+        agentCC.Move(dirToGo * academy.agentRunSpeed);
     }
 
     public override void AgentAction(float[] vectorAction, string textAction)
@@ -116,8 +119,8 @@ public class Agent_SimpleMaze : Agent
     {
         // Zero out any existing movement and return the agent to the spawn point.
         transform.position = spawnPoint;
-        agentRB.velocity = Vector3.zero;
-        agentRB.angularVelocity = Vector3.zero;
+        // agentRB.velocity = Vector3.zero;
+        // agentRB.angularVelocity = Vector3.zero;
     }
 
 }
