@@ -7,14 +7,14 @@ public class Agent_SimpleMaze : Agent
     
     public GameObject goal;             // The goal we are trying to reach.
     public GameObject ground;           // The floor of the Maze.
-    public Vector3 spawnPoint;          // The point to spawn our capsule at.
+    public List<GameObject> spawnPoints;    // The point to spawn our capsule at.
 
     Academy_SimpleMaze academy;         // The academy (we need this for some of the variables it holds)
-    // Rigidbody agentRB;                  // Cache the rigidbody attached to the agent itself.
     CharacterController agentCC;        // Will attempt to Use this in place of the rigidbody. 
     Material groundMaterial;            // The default material assigned to the ground.
     Renderer groundRenderer;            // The renderer of the ground so we can change its colour on success/fail.
-    Camera agentCamera;                 // The camera the agent will use for seeing things.
+    List<Camera> agentCameras;                 // The camera the agent will use for seeing things.
+    GameObject MazeArea;                // The maze area that this agent belongs to. Useful for allowing multiple maze areas in the same scene.
 
     void Awake()
     {
@@ -22,29 +22,37 @@ public class Agent_SimpleMaze : Agent
         // this environment so we can find it by type.
         brain = FindObjectOfType<Brain>();
         academy = FindObjectOfType<Academy_SimpleMaze>();
+        MazeArea = transform.parent.gameObject;
+
+        // Iterate through the children of this maze and capture the spawn points.
+        foreach(Transform child in MazeArea.GetComponentsInChildren<Transform>(false))
+        {
+            if (child.tag == "SpawnPoint")
+                spawnPoints.Add(child.gameObject);
+        }
+        
     }
 
     public override void InitializeAgent()
     {
         // We need to extend the initial InitializeAgent script to support our other variables. This acts sort of like how the Start()
         // function works in standard projects. 
-
         base.InitializeAgent();
 
-        // Get the camera thats attached as a child on this GameObject.
-        agentCamera = GetComponentInChildren<Camera>();
-
         // Get the rigidbody, ground material and ground renderer and cache em.
-        // agentRB = GetComponent<Rigidbody>();
         agentCC = GetComponent<CharacterController>();
         groundRenderer = ground.GetComponent<Renderer>();
         groundMaterial = groundRenderer.material;
 
         goal.GetComponent<GoalReached>().agent = this;
 
-        // Clear any other cameras on the agent then add the only one it should have.
-        agentParameters.agentCameras.Clear();
-        agentParameters.agentCameras.Add(agentCamera);
+        // Clear any other cameras on the agent then add the ones present.
+        // agentParameters.agentCameras.Clear();
+        // foreach (Camera cam in this.GetComponents<Camera>())
+        // {
+            // Iterate through all cameras on the agent and send them to the brain.
+        //    agentParameters.agentCameras.Add(cam);
+        // }
     }
 
     public void ReachedTheGoal()
@@ -56,7 +64,7 @@ public class Agent_SimpleMaze : Agent
         Done();
 
         // Swap the material on the ground to indicate a score.
-        StartCoroutine(GoalReachedSwapGroundMaterial(academy.successMaterial, 0.5f));
+        StartCoroutine(GoalReachedSwapGroundMaterial(academy.successMaterial, 0.25f));
     }
 
     IEnumerator GoalReachedSwapGroundMaterial(Material mat, float time)
@@ -99,15 +107,12 @@ public class Agent_SimpleMaze : Agent
         }
         // Apply any rotation.
         transform.Rotate(rotateDir, Time.fixedDeltaTime * 200f);
-        // Apply force to the agents rigidbody.
-        // agentRB.AddForce(dirToGo * academy.agentRunSpeed, ForceMode.VelocityChange);
         agentCC.Move(dirToGo * academy.agentRunSpeed);
     }
 
     public override void AgentAction(float[] vectorAction, string textAction)
     {
         // The action the agent needs to take. This is called every step of the engine. 
-
         // Move the agent
         MoveAgent(vectorAction);
 
@@ -117,10 +122,23 @@ public class Agent_SimpleMaze : Agent
 
     public override void AgentReset()
     {
-        // Zero out any existing movement and return the agent to the spawn point.
-        transform.position = spawnPoint;
-        // agentRB.velocity = Vector3.zero;
-        // agentRB.angularVelocity = Vector3.zero;
+        // Get a random spawn point out of the array:
+        int spawnPointIndex = Random.Range(0, spawnPoints.Count);
+        // Zero out any existing movement and return the agent to a new point.
+        transform.position = spawnPoints[spawnPointIndex].transform.position;
+        transform.rotation = Quaternion.identity;
+
+        // Move the goal as well, just make sure its not the same as the above spawn point position.
+        int goalIndex = Random.Range(0, spawnPoints.Count);
+
+        do
+        {
+            // Spawn point and goal are the same, re-roll it.
+            goalIndex = Random.Range(0, spawnPoints.Count);
+        } while (goalIndex == spawnPointIndex);
+        
+        goal.transform.position = spawnPoints[goalIndex].transform.position;
+        
     }
 
 }
